@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-063933E3C2"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-063933E3C2");
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lightning and Coral: Diffusion-Limited Aggregation</title>
+    <meta
+      name="description"
+      content="Lightning and Coral: particles wander at random and stick to a growing cluster, and coral, lightning, frost, crystals and roots appear. Diffusion-limited aggregation, live in the browser, with PNG download."
+    />
+    <meta name="author" content="Olivier Giulieri" />
+    <link
+      rel="canonical"
+      href="https://evoluteur.github.io/lightning-and-coral/"
+    />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <meta name="theme-color" content="#1a212d" />
+    <meta property="og:site_name" content="Lightning and Coral" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Lightning and Coral" />
+    <meta
+      property="og:description"
+      content="Particles wander at random and stick: coral, lightning, frost and crystals grow from one rule."
+    />
+    <meta
+      property="og:url"
+      content="https://evoluteur.github.io/lightning-and-coral/"
+    />
+    <meta
+      property="og:image"
+      content="https://evoluteur.github.io/lightning-and-coral/lightning-and-coral.png"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Overpass"
+    />
+    <link id="omg-core-css" rel="stylesheet" href="css/core.css" />
+    <script>
+      // Themes (dark, light, evol-blue) are copies of omg-themes; set OMG_THEMES_BASE to link the hosted ones instead.
+      window.OMG_THEMES_BASE = ""; // or "https://evoluteur.github.io/omg-themes/" to link the hosted themes
+      window.OMG_DEFAULT_THEME = "dark";
+      (function () {
+        var t = window.OMG_DEFAULT_THEME;
+        try {
+          t = localStorage.getItem("omg-theme") || t;
+        } catch (e) {}
+        if (t !== "dark" && t !== "light" && t !== "evol-blue")
+          t = window.OMG_DEFAULT_THEME;
+        document.documentElement.setAttribute("data-theme", t);
+        // written here (not in the markup) so the saved theme loads before first paint
+        document.write(
+          '<link id="omg-theme-css" rel="stylesheet" href="' +
+            window.OMG_THEMES_BASE +
+            "css/themes/" +
+            t +
+            "/" +
+            t +
+            '.css" />',
+        );
+      })();
+    </script>
+    <link id="omg-density-css" rel="stylesheet" href="css/densities.css" />
+    <link rel="stylesheet" href="css/dla.css" />
+
+    <script src="js/omg.js"></script>
+    <script src="js/dla.js"></script>
+  </head>
+
+  <body
+    onload="
+      setupPage('home');
+      initDLA();
+    "
+    id="omg-body"
+  >
+    <div id="omg-header">
+      <h1>Lightning and Coral</h1>
+      <div id="omg-header-tools">
+        <div id="omg-theme-picker"></div>
+        <a
+          id="omg-github"
+          href="https://github.com/evoluteur/lightning-and-coral"
+          target="_blank"
+          rel="noopener"
+          title="Lightning and Coral on GitHub"
+          aria-label="Lightning and Coral on GitHub"
+          ><svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" /></svg
+        ></a>
+      </div>
+    </div>
+    <h2>Wander, touch, stick</h2>
+    <div class="content">
+      <div class="app-layout">
+        <div class="art-wrap">
+          <canvas id="dla" aria-label="Growing cluster"></canvas>
+        </div>
+        <div class="controls">
+          <label>Form <select id="form"></select></label>
+          <p id="form-text" class="hint"></p>
+          <div id="walk-box" class="group">
+            <label><span>Stickiness <b id="v-stick"></b></span><input id="stick" type="range" min="0.05" max="1" step="0.05" /></label>
+            <p class="hint">Particles that stick less often slip past the tips: thicker, denser branches.</p>
+            <label><span>Drift <b id="v-drift"></b></span><input id="drift" type="range" min="0" max="0.8" step="0.05" /></label>
+            <p class="hint">A pull toward the cluster: straighter, faster branches.</p>
+          </div>
+          <div id="eta-box" class="group">
+            <label><span>Focus <b id="v-eta"></b></span><input id="eta" type="range" min="0.5" max="5" step="0.5" /></label>
+            <p class="hint">How strongly the field picks the next step: low, a bushy discharge; high, a single bolt.</p>
+          </div>
+          <label>Colors <select id="palette"></select></label>
+          <div class="stats">
+            <div><span>Particles</span><b id="v-count">0</b></div>
+          </div>
+          <div class="buttons">
+            <button type="button" id="btn-run">Pause</button>
+            <button type="button" id="btn-new" class="secondary">New</button>
+            <button type="button" id="btn-png" class="secondary wide">Download PNG</button>
+          </div>
+          <p class="hint">Click the picture to plant a new seed (not for lightning). The address of the page keeps the settings, to share them.</p>
+        </div>
+      </div>
+
+      <h3>A random walk that builds</h3>
+      <div class="explain">
+        <p>
+          In 1981 the physicists Thomas Witten and Leonard Sander proposed a
+          very simple model. Release a particle far away and let it wander,
+          one random step after another. When it touches the cluster, it
+          sticks. Release the next one. They called it diffusion-limited
+          aggregation, and the clusters it grows are fractals: branches on
+          branches, never filling in.
+        </p>
+        <p>
+          The reason is that tips stick out. A wandering particle is much
+          more likely to bump into a tip than to find its way down into a
+          fjord between two branches, so tips grow faster, and the faster they
+          grow, the more they stick out. The same runaway shapes copper
+          deposits in an electrolyte, mineral dendrites in rocks, frost on
+          a window, coral, river networks, and the branching path of a
+          lightning bolt, whose leader grows where the electric field is
+          strongest, at its tips. For lightning, this page uses the
+          dielectric breakdown model of Niemeyer, Pietronero and Wiesmann
+          (1984), the electric version of the same idea: the bolt steps
+          down to wherever the field pulls hardest, and when a branch
+          touches the ground, the path it opened lights up.
+        </p>
+        <p>
+          <em>Stickiness</em> lets particles slip past before they stick, so
+          they reach further in and the branches thicken. <em>Drift</em>
+          pulls them toward the cluster, like gravity on coral polyps or the
+          field of a storm cloud, and straightens the branches.
+        </p>
+      </div>
+
+      <div class="footer">
+        <p>
+          Lightning and Coral is open source on
+          <a href="https://github.com/evoluteur/lightning-and-coral">GitHub</a>
+          with an MIT license.
+        </p>
+        <p>
+          Had fun browsing the app?
+          <a href="https://github.com/sponsors/evoluteur"
+            >Buy me a coffee by becoming a sponsor</a
+          >.
+        </p>
+        <p>
+          You may also enjoy
+          <a href="https://evoluteur.github.io/snowflake-grower/">Snowflake Grower</a>,
+          <a href="https://evoluteur.github.io/slime-mold/">Slime Mold</a>
+          and
+          <a href="https://evoluteur.github.io/infinite-coastlines/">Infinite Coastlines</a>.
+          See them all on
+          <a href="https://evoluteur.github.io/generative-art.html">Generative Art</a>.
+        </p>
+        <p class="copyright">
+          &#169; 2026
+          <a href="https://evoluteur.github.io/">Olivier Giulieri</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

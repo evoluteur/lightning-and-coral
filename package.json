@@ -1,0 +1,21 @@
+{
+  "name": "lightning-and-coral",
+  "version": "1.0.0",
+  "description": "Lightning and Coral: particles wander at random and stick to a growing cluster, and coral, lightning, frost, crystals and roots appear. Diffusion-limited aggregation, live in the browser, with PNG download.",
+  "repository": "github:evoluteur/lightning-and-coral",
+  "homepage": "https://evoluteur.github.io/lightning-and-coral/",
+  "copyright": "(c) 2026 Olivier Giulieri",
+  "author": "Olivier Giulieri (https://evoluteur.github.io/)",
+  "license": "MIT",
+  "keywords": [
+    "dla",
+    "diffusion-limited-aggregation",
+    "lightning",
+    "coral",
+    "frost",
+    "dendrite",
+    "fractal",
+    "generative-art",
+    "canvas"
+  ]
+}
