@@ -39,7 +39,7 @@ const state = {
 };
 
 let canvas, ctx, off, offCtx, img, px;
-let grid, count = 0, done = false, reach = 0; // reach: how far the cluster has grown from its seed
+let grid, blocks, count = 0, done = false, reach = 0; // reach: how far the cluster has grown from its seed
 let rand;
 let parent, pts, channel = null; // lightning
 
@@ -87,6 +87,7 @@ const stickAt = (x, y) => {
     const k = Y * G + X;
     if (grid[k]) return;
     grid[k] = 1;
+    blocks[((Y / B) | 0) * NBK + ((X / B) | 0)] = 1;
     px[k] = colors[Math.min(255, Math.floor(along(X, Y) * 255 * 1.4))];
     count++;
   };
@@ -107,6 +108,7 @@ const stickAt = (x, y) => {
 
 const reset = () => {
   grid = new Uint8Array(G * G);
+  blocks = new Uint8Array(NBK * NBK);
   px = new Uint32Array(img.data.buffer);
   px.fill(0);
   count = 0;
@@ -125,6 +127,28 @@ const reset = () => {
   reach = 0;
   done = false;
   saveHash();
+};
+
+// The grid is also kept in coarse B x B blocks, marked once anything sticks
+// in them. A walker whose surrounding blocks are all empty is at least B
+// (or 2B) away from the cluster, so it can take one long step instead of
+// many short ones; inside the fractal's empty fjords that is most of the walk.
+const B = 8;
+const NBK = Math.ceil(G / B);
+const clearAround = (x, y, r) => {
+  const bx = (x / B) | 0, by = (y / B) | 0;
+  for (let j = by - r; j <= by + r; j++) {
+    if (j < 0 || j >= NBK) continue;
+    for (let i = bx - r; i <= bx + r; i++) {
+      let I = i;
+      if (I < 0 || I >= NBK) {
+        if (radial()) continue;
+        I = (I + NBK) % NBK;
+      }
+      if (blocks[j * NBK + I]) return false;
+    }
+  }
+  return true;
 };
 
 const touches = (x, y) => {
@@ -162,7 +186,17 @@ const walk = () => {
     if (radial()) gap = Math.hypot(x - C, y - C) - reach - 2;
     else if (state.form === "coral") gap = G - 1 - reach - 2 - y;
     else gap = y - reach - 2;
-    const s = gap > 4 ? gap - 2 : 1; // big jumps far away, single steps near the cluster
+    // big jumps far away, single steps near the cluster
+    let s = gap > 4 ? gap - 2 : 1;
+    // (only without drift: a long step would also skip the drift of the
+    // many short steps it replaces, and change the shape)
+    if (!state.drift && s < 2 * B - 2) {
+      const X = Math.round(x), Y = Math.round(y);
+      if (X >= 0 && X < G && Y >= 0 && Y < G) {
+        if (clearAround(X, Y, 2)) s = 2 * B - 2;
+        else if (s < B - 2 && clearAround(X, Y, 1)) s = B - 2;
+      }
+    }
     const a = rand() * Math.PI * 2;
     x += Math.cos(a) * s;
     y += Math.sin(a) * s;
