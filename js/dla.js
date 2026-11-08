@@ -149,7 +149,8 @@ const walk = () => {
     y = C + Math.sin(a) * R;
   } else {
     x = rand() * G;
-    y = state.form === "coral" ? G - 1 - R : R;
+    // near the end the release line would fall off the grid: keep it on
+    y = state.form === "coral" ? Math.max(0, G - 1 - R) : Math.min(G - 1, R);
   }
   const kill = R * 2 + 20;
   // the drift pulls toward the seed: down for coral, up for roots, inward for frost
