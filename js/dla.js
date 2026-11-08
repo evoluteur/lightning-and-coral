@@ -132,7 +132,10 @@ const touches = (x, y) => {
     const Y = y + dy;
     if (Y < 0 || Y >= G) continue;
     for (let dx = -1; dx <= 1; dx++) {
-      const X = (x + dx + G) % G;
+      let X = x + dx;
+      if (radial()) {
+        if (X < 0 || X >= G) continue;
+      } else X = (X + G) % G;
       if (grid[Y * G + X]) return true;
     }
   }
@@ -170,15 +173,19 @@ const walk = () => {
         y -= ((y - C) / d) * state.drift;
       } else y += state.form === "coral" ? state.drift : -state.drift;
     }
-    x = (x + G) % G; // wrap left and right
     if (radial()) {
+      // no wrapping here: a walker that left by one side would land far from
+      // where it was, and never reach the kill circle
       if (Math.hypot(x - C, y - C) > kill) return;
-    } else if (y < 0 || y >= G) {
-      if (state.form === "coral" ? y < 0 : y >= G) return;
-      y = Math.max(0, Math.min(G - 1, y));
+    } else {
+      x = (x + G) % G; // wrap left and right
+      if (y < 0 || y >= G) {
+        if (state.form === "coral" ? y < 0 : y >= G) return;
+        y = Math.max(0, Math.min(G - 1, y));
+      }
     }
     const X = Math.round(x) % G, Y = Math.round(y);
-    if (Y < 0 || Y >= G) continue;
+    if (X < 0 || Y < 0 || Y >= G) continue;
     if (grid[Y * G + X]) continue;
     if (s === 1 && touches(X, Y) && rand() < state.stick) {
       stickAt(X, Y);
