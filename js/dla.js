@@ -365,7 +365,8 @@ const draw = () => {
   ctx.fillStyle = pal.bg;
   ctx.fillRect(0, 0, w, w);
   ctx.imageSmoothingEnabled = true;
-  if (pal.glow) {
+  // (lightning draws its own glow: its pixel layer is empty)
+  if (pal.glow && state.form !== "lightning") {
     // a soft glow under the sharp picture
     ctx.globalCompositeOperation = "lighter";
     ctx.filter = `blur(${Math.round(w / 120)}px)`;
